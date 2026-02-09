@@ -232,7 +232,7 @@ Structure the plan by developer role. For each role, list:
   - Reference at most **one** existing pattern/file per role (if needed)
 - **Depends on**: which other roles must complete first (if any)
 
-#### Format:
+#### Format (generic):
 
 ```
 ## Implementation Plan
@@ -241,31 +241,32 @@ Structure the plan by developer role. For each role, list:
 Summary: <one line>
 Depends on: none
 
-1. Validate data source and visibility rules (segmentation vs. group feed)
-2. Define API contract for daily count (inputs + response)
-3. Implement count computation + caching strategy (if needed)
+1. Validate data source(s) and access/visibility rules
+2. Define or extend API contract (inputs/outputs)
+3. Implement logic + error handling
+4. Add minimal tests or metrics (if applicable)
 
 ### Frontend - Web (humand-web)
 Summary: <one line>
-Depends on: Backend (needs API endpoint), Translations
+Depends on: Backend (if API changes), Translations
 
-1. Add query hook to fetch daily count
-2. Render counter in feed with defined UX rules (zero state, refresh)
-3. Handle error/loading states
+1. Integrate data fetch and caching strategy
+2. Implement UI changes per UX definitions
+3. Handle error/loading/empty states
 
 ### Mobile (humand-mobile)
 Summary: <one line>
-Depends on: Backend (needs API endpoint), Translations
+Depends on: Backend (if API changes), Translations
 
-1. Add query hook/service for daily count
-2. Render counter in feed header per UX rules
-3. Tie refresh to feed reload
+1. Integrate data fetch and caching strategy
+2. Implement UI changes per UX definitions
+3. Handle error/loading/empty states
 
 ### Translations (hu-translations)
 Summary: <one line>
 Depends on: none
 
-1. Add new keys in `post` namespace (en/es primary + fallback in other locales)
+1. Add new keys in the relevant namespace(s) and propagate to other locales
 
 ### Data Contracts
 
