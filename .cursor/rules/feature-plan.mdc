@@ -81,12 +81,7 @@ Use these as starting points when exploring. Do NOT assume they are exhaustive -
 
 Check if the user already provided a feature description or Jira ticket ID in their message.
 
-**Always ask key definition questions up front** (even if a Jira ticket exists) when the feature involves time windows, visibility, or counting. Use general questions only; if none apply, omit them entirely. These are required to validate feasibility and effort before deep exploration:
-
-- What is the **time window** and **timezone** definition (if any)?
-- What are the **inclusion/exclusion rules** and the **source of truth** for visibility?
-- What is the **expected output format** (and empty/zero-state behavior)?
-- What are the **refresh/recency requirements** (manual, periodic, event-driven)?
+**Always ask key definition questions up front** (even if a Jira ticket exists) when the feature involves time windows, visibility, or counting. **Do not use a fixed list.** Instead, generate the **most pertinent** clarifying questions dynamically based on the request. Ask only what is necessary to validate feasibility and effort before deep exploration; omit questions that do not apply.
 
 If these are already answered, summarize them explicitly before continuing.
 
