@@ -1,12 +1,12 @@
 # Humand Agent Tooling
 
-Shared Cursor skills and agent configuration for the Humand development team.
+Shared Cursor commands and agent configuration for the Humand development team.
 
 ## Structure
 
 ```
-skills/
-  feature-plan/   # /feature-plan - PM-facing feature planning & feasibility assessment
+.cursor/commands/
+  feature-plan.md   # /feature-plan - PM-facing feature planning & feasibility assessment
 ```
 
 ## Setup
@@ -16,24 +16,24 @@ skills/
 1. Install the GitHub CLI: https://cli.github.com/
 2. Authenticate: `gh auth login`
 3. Clone this repo anywhere on your machine
-4. Copy or symlink the skills you need into your Cursor skills directory:
+4. Copy or symlink the commands you need into your project's `.cursor/commands/` directory:
    ```bash
    # Option A: Symlink (auto-updates when you pull)
-   ln -s /path/to/humand-agent-tooling/skills/feature-plan ~/.cursor/skills/feature-plan
+   ln -s /path/to/humand-agent-tooling/.cursor/commands/feature-plan.md /your/project/.cursor/commands/feature-plan.md
 
    # Option B: Copy
-   cp -r /path/to/humand-agent-tooling/skills/feature-plan ~/.cursor/skills/feature-plan
+   cp /path/to/humand-agent-tooling/.cursor/commands/feature-plan.md /your/project/.cursor/commands/feature-plan.md
    ```
-5. Open any Cursor workspace and use `/feature-plan` in the chat
+5. Open the project in Cursor and use `/feature-plan` in the chat
 
 ### For Developers
 
-Developers using the multi-repo workspace at `~/Code/humand/` already have workspace-level skills (`/start`, `/commit`, `/finish`, `/status`) in `.cursor/skills/`.
+Developers using the multi-repo workspace at `~/Code/humand/` already have workspace-level commands (`/start`, `/commit`, `/finish`, `/status`) in `.cursor/commands/`.
 
-The skills in this repo are complementary and can be installed as user-level skills following the same steps above.
+The commands in this repo are complementary and can be installed following the same steps above.
 
 ## Prerequisites
 
-| Skill  | Requires          |
-|--------|--------------------|
+| Command | Requires          |
+|---------|--------------------|
 | /feature-plan | `gh` CLI (authenticated with HumandDev org access) |

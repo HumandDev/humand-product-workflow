@@ -1,11 +1,8 @@
 ---
-name: feature-plan
 description: PM-facing feature planning - assess feasibility, estimate complexity, and produce implementation plans across Humand repos
 ---
 
-# /feature-plan - Feature Planning & Feasibility Assessment
-
-A product manager describes a feature in plain language. The agent explores the codebase via GitHub API (no local clones needed), assesses technical feasibility, estimates relative complexity, and produces an implementation plan broken down by developer role.
+You are helping a product manager plan a feature. Your task is to explore the codebase via GitHub API (no local clones needed), assess technical feasibility, estimate relative complexity, and produce an implementation plan broken down by developer role.
 
 ## Prerequisites
 
@@ -78,21 +75,33 @@ Use these as starting points when exploring. Do NOT assume they are exhaustive -
 
 ## Workflow
 
-### 1. Gather Feature Description
+### Step 1: Parse Arguments or Gather Feature Description
 
-Prompt the PM for:
+Check if `$ARGUMENTS` contains:
+- **Jira ticket ID**: Pattern `[A-Z]+-\d+` (e.g., SQRN-1234, SQSH-456)
+- **Feature description**: Remaining text after ticket ID
 
-1. **Feature description** (natural language -- this is the primary input)
-2. **Jira ticket** (optional, for additional context)
-3. **Figma URL** (optional, for UI reference)
-
-If a Jira ticket is provided, try to fetch details via Atlassian MCP:
+If `$ARGUMENTS` has a ticket ID, fetch details via Atlassian MCP:
 ```
 mcp__atlassian__get_issue(issue_id_or_key: "SQRN-1234")
 ```
-If MCP is unavailable, proceed with whatever the PM provided.
+If MCP is unavailable, proceed with whatever was provided.
 
-### 2. Infer Affected Repos
+If no arguments or incomplete, ask in ONE message:
+
+```
+**Feature Planning**
+
+Please provide:
+
+1. **Feature description** (natural language -- this is the primary input):
+2. **Jira ticket** (ID, URL, or "none"):
+3. **Figma URL** (optional, or "none"):
+
+Example: "SQRN-1234" or "Add a reactions feature to the feed posts"
+```
+
+### Step 2: Infer Affected Repos
 
 Based on the feature description, determine which repos are involved. Use these heuristics:
 
@@ -114,7 +123,7 @@ Based on your description, this feature would involve:
 Does this look right? Any repos to add or remove?
 ```
 
-### 3. Explore Codebase via GitHub API
+### Step 3: Explore Codebase via GitHub API
 
 For each affected repo, explore the codebase to understand current patterns and identify integration points.
 
@@ -152,7 +161,7 @@ What to read per repo (adapt based on feature):
 
 **Important**: Read only what you need. Aim for 5-15 file reads total, not 50. Read the integration point + one reference example per repo.
 
-### 4. Assess Feasibility & Complexity
+### Step 4: Assess Feasibility & Complexity
 
 Based on the exploration, produce:
 
@@ -203,7 +212,7 @@ Flag anything that increases risk or uncertainty:
 
 If no flags, explicitly say "No elevated risks identified."
 
-### 5. Produce Implementation Plan
+### Step 5: Produce Implementation Plan
 
 Structure the plan by developer role. For each role, list:
 
@@ -257,7 +266,7 @@ Depends on: none
   Response: { field: type, ... }
 ```
 
-### 6. Output Summary
+### Step 6: Output Summary
 
 Display the full assessment as a single structured output:
 
@@ -296,9 +305,9 @@ Display the full assessment as a single structured output:
 - If a file path from Known Structural Patterns doesn't exist: The codebase may have changed. Adapt by reading the actual tree and noting the discrepancy.
 - If the feature description is too vague: Ask clarifying questions before exploring. Do not guess.
 
-## Notes
+## Important Notes
 
-- This skill is **read-only**. It never creates branches, modifies code, or writes to any repo.
+- This command is **read-only**. It never creates branches, modifies code, or writes to any repo.
 - All codebase exploration happens via `gh api` -- no local clones required.
 - The plan is a best-effort technical assessment. Developers should validate the plan against their knowledge of the codebase before starting.
 - The Known Structural Patterns section should be updated if the repos undergo significant architectural changes.
