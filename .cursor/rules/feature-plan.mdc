@@ -81,9 +81,7 @@ Use these as starting points when exploring. Do NOT assume they are exhaustive -
 
 Check if the user already provided a feature description or Jira ticket ID in their message.
 
-**Always ask key definition questions up front** (even if a Jira ticket exists) when the feature involves time windows, visibility, or counting. **Do not use a fixed list.** Instead, generate the **most pertinent** clarifying questions dynamically based on the request. Ask only what is necessary to validate feasibility and effort before deep exploration; omit questions that do not apply.
-
-If these are already answered, summarize them explicitly before continuing.
+If the feature involves time windows, visibility, or counting, ask a small set of **dynamic** clarifying questions tailored to the request. If these are already answered, summarize them before continuing.
 
 If a Jira ticket ID is present (pattern `[A-Z]+-\d+`), fetch details via Atlassian MCP:
 ```
