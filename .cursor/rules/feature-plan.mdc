@@ -81,13 +81,12 @@ Use these as starting points when exploring. Do NOT assume they are exhaustive -
 
 Check if the user already provided a feature description or Jira ticket ID in their message.
 
-**Always ask key definition questions up front** (even if a Jira ticket exists) when the feature involves time windows, visibility, or counting. These are required to validate feasibility and effort before deep exploration:
+**Always ask key definition questions up front** (even if a Jira ticket exists) when the feature involves time windows, visibility, or counting. Use general questions only; if none apply, omit them entirely. These are required to validate feasibility and effort before deep exploration:
 
-- What does **“daily”** mean (instance timezone, user timezone, UTC, rolling 24h)?
-- What is the **source of truth** for visibility (segmentation rules, group feed inclusion, muted/blocked content)?
-- Should the counter **include group posts** when group posts are shown in feed?
-- How should **zero/empty state** be displayed (show “0” or hide)?
-- How often must it **refresh** (on every fetch, pull-to-refresh, periodic)?
+- What is the **time window** and **timezone** definition (if any)?
+- What are the **inclusion/exclusion rules** and the **source of truth** for visibility?
+- What is the **expected output format** (and empty/zero-state behavior)?
+- What are the **refresh/recency requirements** (manual, periodic, event-driven)?
 
 If these are already answered, summarize them explicitly before continuing.
 
