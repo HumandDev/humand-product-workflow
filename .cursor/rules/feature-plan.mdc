@@ -77,9 +77,11 @@ Use these as starting points when exploring. Do NOT assume they are exhaustive -
 
 ## Workflow
 
-### Step 1: Gather Feature Description
+### Step 1: Gather Feature Description **and Key Definitions (early)**
 
 Check if the user already provided a feature description or Jira ticket ID in their message.
+
+If the feature involves time windows, visibility, or counting, ask a small set of **dynamic** clarifying questions tailored to the request. If these are already answered, summarize them before continuing.
 
 If a Jira ticket ID is present (pattern `[A-Z]+-\d+`), fetch details via Atlassian MCP:
 ```
@@ -101,7 +103,7 @@ Please provide:
 Example: "SQRN-1234" or "Add a reactions feature to the feed posts"
 ```
 
-### Step 2: Infer Affected Repos
+### Step 2: Infer Affected Repos (validation-first)
 
 Based on the feature description, determine which repos are involved. Use these heuristics:
 
@@ -123,11 +125,11 @@ Based on your description, this feature would involve:
 Does this look right? Any repos to add or remove?
 ```
 
-### Step 3: Explore Codebase via GitHub API
+### Step 3: Explore Codebase via GitHub API (lightweight validation)
 
-For each affected repo, explore the codebase to understand current patterns and identify integration points.
+For each affected repo, explore the codebase just enough to validate feasibility, data sources, and integration points. **Do not perform a deep implementation dive.**
 
-**Strategy: progressive drill-down, not exhaustive scan.**
+**Strategy: progressive drill-down, not exhaustive scan.** Aim for **3–8 file reads total**.
 
 #### Step 3a: Fetch directory tree (top-level + relevant subtrees)
 
@@ -142,9 +144,9 @@ gh api "repos/HumandDev/<repo>/git/trees/<default_branch>?recursive=1" \
 
 Keep tree fetches focused. For example, for humand-main-api, filter for `modules/` and `routes/` paths. For humand-web, filter for `src/pages/`, `src/services/`, `src/hooks/`.
 
-#### Step 3b: Read key files
+#### Step 3b: Read key files (only what validates feasibility)
 
-Read specific files to understand patterns the feature should follow:
+Read specific files to understand patterns the feature should follow (minimal set):
 
 ```bash
 gh api repos/HumandDev/<repo>/contents/<file_path>?ref=<branch> \
@@ -159,9 +161,9 @@ What to read per repo (adapt based on feature):
 - **hu-translations**: The relevant namespace in `en` (e.g., `locale/en/home.json`) to see existing key naming conventions
 - **material-hu**: Existing similar components if new shared components are needed
 
-**Important**: Read only what you need. Aim for 5-15 file reads total, not 50. Read the integration point + one reference example per repo.
+**Important**: Read only what you need. Aim for 3–8 file reads total. Read the integration point + one reference example per repo.
 
-### Step 4: Assess Feasibility & Complexity
+### Step 4: Assess Feasibility & Complexity (effort-focused)
 
 Based on the exploration, produce:
 
@@ -177,13 +179,13 @@ Be specific about what makes it standard or novel. Reference the actual files/pa
 
 #### 4b. Complexity Signals
 
-Report these concrete signals (do not invent time estimates):
+Report these concrete signals (do not invent time estimates). If you cannot **prove** a value from code exploration, mark it as **unknown**:
 
 | Signal | Value |
 |--------|-------|
 | Repos involved | (count and names) |
-| Files to create | (count, list paths) |
-| Files to modify | (count, list paths) |
+| Files to create | (known count or "unknown") |
+| Files to modify | (known count or "unknown") |
 | New patterns required | (list any, or "none") |
 | Database changes | (yes/no, describe if yes) |
 | Cross-repo data contracts | (count of new API interfaces) |
@@ -212,18 +214,18 @@ Flag anything that increases risk or uncertainty:
 
 If no flags, explicitly say "No elevated risks identified."
 
-### Step 5: Produce Implementation Plan
+### Step 5: Produce Execution Plan (high-level, not deep implementation)
 
 Structure the plan by developer role. For each role, list:
 
 - **Repo**: which repo to work in
 - **Summary**: one-line description of what this role does
-- **Tasks**: ordered list of specific things to implement
-  - Each task includes: action (create/modify), file path, and description
-  - Reference the existing pattern/file to follow
+- **Tasks**: 3–6 high-level tasks focused on validation and effort
+  - Avoid file-by-file lists unless the user explicitly asks
+  - Reference at most **one** existing pattern/file per role (if needed)
 - **Depends on**: which other roles must complete first (if any)
 
-#### Format:
+#### Format (generic):
 
 ```
 ## Implementation Plan
@@ -232,31 +234,32 @@ Structure the plan by developer role. For each role, list:
 Summary: <one line>
 Depends on: none
 
-1. Create `<path>` - <description> (follow pattern in `<reference_file>`)
-2. Modify `<path>` - <description>
-...
+1. Validate data source(s) and access/visibility rules
+2. Define or extend API contract (inputs/outputs)
+3. Implement logic + error handling
+4. Add minimal tests or metrics (if applicable)
 
 ### Frontend - Web (humand-web)
 Summary: <one line>
-Depends on: Backend (needs API endpoint), Translations
+Depends on: Backend (if API changes), Translations
 
-1. Create `<path>` - <description> (follow pattern in `<reference_file>`)
-2. Modify `<path>` - <description>
-...
+1. Integrate data fetch and caching strategy
+2. Implement UI changes per UX definitions
+3. Handle error/loading/empty states
 
 ### Mobile (humand-mobile)
 Summary: <one line>
-Depends on: Backend (needs API endpoint), Translations
+Depends on: Backend (if API changes), Translations
 
-1. ...
+1. Integrate data fetch and caching strategy
+2. Implement UI changes per UX definitions
+3. Handle error/loading/empty states
 
 ### Translations (hu-translations)
 Summary: <one line>
 Depends on: none
 
-1. Modify `locale/en/<namespace>.json` - Add keys: ...
-2. Modify `locale/es/<namespace>.json` - Add keys: ...
-3. All other locales - Add same keys with English fallback values
+1. Add new keys in the relevant namespace(s) and propagate to other locales
 
 ### Data Contracts
 
