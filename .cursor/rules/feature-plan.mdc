@@ -1,5 +1,7 @@
 ---
-description: PM-facing feature planning - assess feasibility, estimate complexity, and produce implementation plans across Humand repos
+description: When the user asks to plan a feature, assess feasibility, estimate complexity, or produce an implementation plan for a feature across Humand repos
+globs: 
+alwaysApply: false
 ---
 
 You are helping a product manager plan a feature. Your task is to explore the codebase via GitHub API (no local clones needed), assess technical feasibility, estimate relative complexity, and produce an implementation plan broken down by developer role.
@@ -75,19 +77,17 @@ Use these as starting points when exploring. Do NOT assume they are exhaustive -
 
 ## Workflow
 
-### Step 1: Parse Arguments or Gather Feature Description
+### Step 1: Gather Feature Description
 
-Check if `$ARGUMENTS` contains:
-- **Jira ticket ID**: Pattern `[A-Z]+-\d+` (e.g., SQRN-1234, SQSH-456)
-- **Feature description**: Remaining text after ticket ID
+Check if the user already provided a feature description or Jira ticket ID in their message.
 
-If `$ARGUMENTS` has a ticket ID, fetch details via Atlassian MCP:
+If a Jira ticket ID is present (pattern `[A-Z]+-\d+`), fetch details via Atlassian MCP:
 ```
 mcp__atlassian__get_issue(issue_id_or_key: "SQRN-1234")
 ```
 If MCP is unavailable, proceed with whatever was provided.
 
-If no arguments or incomplete, ask in ONE message:
+If the user's message lacks sufficient detail, ask in ONE message:
 
 ```
 **Feature Planning**
@@ -307,7 +307,7 @@ Display the full assessment as a single structured output:
 
 ## Important Notes
 
-- This command is **read-only**. It never creates branches, modifies code, or writes to any repo.
+- This rule is **read-only**. It never creates branches, modifies code, or writes to any repo.
 - All codebase exploration happens via `gh api` -- no local clones required.
 - The plan is a best-effort technical assessment. Developers should validate the plan against their knowledge of the codebase before starting.
 - The Known Structural Patterns section should be updated if the repos undergo significant architectural changes.
