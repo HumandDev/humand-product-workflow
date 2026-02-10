@@ -77,11 +77,13 @@ Use these as starting points when exploring. Do NOT assume they are exhaustive -
 
 ## Workflow
 
-### Step 1: Gather Feature Description **and Key Definitions (early)**
+### Step 1: Clarify Scope & Definitions (always; repeat as needed)
 
-Check if the user already provided a feature description or Jira ticket ID in their message.
+Check if the user already provided a feature/fix/change description or Jira ticket ID in their message.
 
-If the feature involves time windows, visibility, or counting, ask a small set of **dynamic** clarifying questions tailored to the request. If these are already answered, summarize them before continuing.
+If any requirement is **ambiguous or missing**, ask a small set of **dynamic** clarifying questions tailored to the request, then **pause** and wait for answers **before** continuing to Steps 2–6.
+
+This clarification gate applies **at the start and mid-way** through exploration: if you discover a new unknown later (e.g., while reading code) that would change scope, API contract, data meaning, permissions/visibility, acceptance criteria, or sizing, **stop and ask** instead of guessing.
 
 If a Jira ticket ID is present (pattern `[A-Z]+-\d+`), fetch details via Atlassian MCP:
 ```
@@ -89,16 +91,20 @@ mcp__atlassian__get_issue(issue_id_or_key: "SQRN-1234")
 ```
 If MCP is unavailable, proceed with whatever was provided.
 
-If the user's message lacks sufficient detail, ask in ONE message:
+If the user's message lacks sufficient detail, ask in ONE message (only include the items that are actually needed to disambiguate scope):
 
 ```
-**Feature Planning**
+**Feature Planning / Change Request**
 
 Please provide:
 
-1. **Feature description** (natural language -- this is the primary input):
-2. **Jira ticket** (ID, URL, or "none"):
-3. **Figma URL** (optional, or "none"):
+1. **Goal / expected behavior** (what changes, for whom):
+2. **Where it appears** (web/mobile/backoffice + screen/placement):
+3. **Who is affected** (roles/permissions/segmentations/visibility rules):
+4. **Key definitions** (anything that changes scope: what counts/qualifies, time windows, states to include/exclude, etc.):
+5. **Update expectations** (load-only vs refresh vs realtime):
+6. **Jira ticket** (ID, URL, or "none"):
+7. **Figma URL** (optional, or "none"):
 
 Example: "SQRN-1234" or "Add a reactions feature to the feed posts"
 ```
@@ -130,6 +136,8 @@ Does this look right? Any repos to add or remove?
 For each affected repo, explore the codebase just enough to validate feasibility, data sources, and integration points. **Do not perform a deep implementation dive.**
 
 **Strategy: progressive drill-down, not exhaustive scan.** Aim for **3–8 file reads total**.
+
+**Clarification gate (again):** If exploration reveals a scope-defining unknown (requirements, definitions, permissions, visibility, data meaning, API contract), **pause** and ask the user before proceeding to feasibility/complexity/sizing. Do not silently pick an interpretation.
 
 #### Step 3a: Fetch directory tree (top-level + relevant subtrees)
 
@@ -166,6 +174,8 @@ What to read per repo (adapt based on feature):
 ### Step 4: Assess Feasibility & Complexity (effort-focused)
 
 Based on the exploration, produce:
+
+If critical clarifications are still missing, do **not** provide a definitive feasibility rating or t-shirt size. Instead, state what is blocked and ask the minimum questions needed to unblock.
 
 #### 4a. Technical Feasibility
 
