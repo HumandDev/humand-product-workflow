@@ -8,6 +8,9 @@ This is a generalized duplicate of the Shark skill and is intended for other squ
 
 - Team name (for report labels), e.g. `Orca`
 - Jira ticket prefix (or full regex), e.g. `SQOR`
+
+## Optional team inputs
+
 - Team members (Git author names/logins), e.g. `alice-hu,bob-hu,Charlie Name`
 
 You can provide these via environment variables, or run interactively and answer prompts.
@@ -15,6 +18,12 @@ You can provide these via environment variables, or run interactively and answer
 ## Run
 
 ### Non-interactive (recommended for reproducibility)
+
+```bash
+TEAM_NAME="Zebra" \
+TEAM_TICKET_PREFIX="SQZB" \
+bash .cursor/skills/hu-team-staging-status/team-staging-status.sh
+```
 
 ```bash
 TEAM_NAME="Orca" \
@@ -30,6 +39,7 @@ bash .cursor/skills/hu-team-staging-status/team-staging-status.sh
 ```
 
 If required team inputs are missing and the shell is interactive, the script prompts for them.
+Team members are optional and only required in author-based filtering mode.
 
 ## Team-related environment variables
 
@@ -38,6 +48,7 @@ If required team inputs are missing and the shell is interactive, the script pro
 - `TEAM_TICKET_REGEX`: Optional full ticket regex override (takes precedence over prefix)
 - `TEAM_MEMBERS`: Comma-separated author identifiers used to build the author matcher
 - `TEAM_AUTHORS_PATTERN`: Optional full regex override for author matching (takes precedence over members)
+- `TEAM_FILTER_MODE`: `auto|ticket|author|either` (default `auto`; if no members/pattern provided, `auto` uses `ticket`)
 
 ## Other optional environment variables
 

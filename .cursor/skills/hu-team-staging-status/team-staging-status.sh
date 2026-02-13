@@ -29,6 +29,7 @@ TEAM_TICKET_PREFIX_EFF=""
 TEAM_TICKET_REGEX_EFF=""
 TEAM_MEMBERS_EFF=""
 TEAM_AUTHORS_PATTERN_EFF=""
+TEAM_FILTER_MODE_EFF=""
 
 declare -A JIRA_SUMMARY_CACHE
 
@@ -54,9 +55,14 @@ print_usage() {
 Required team inputs:
   - TEAM_NAME            (e.g. "Orca")
   - TEAM_TICKET_PREFIX   (e.g. "SQOR"), or TEAM_TICKET_REGEX
+Optional team inputs:
   - TEAM_MEMBERS         (comma-separated), or TEAM_AUTHORS_PATTERN
+  - TEAM_FILTER_MODE     auto|ticket|author|either (default: auto)
 
 Examples:
+  TEAM_NAME="Zebra" TEAM_TICKET_PREFIX="SQZB" \
+    bash .cursor/skills/hu-team-staging-status/team-staging-status.sh
+
   TEAM_NAME="Orca" TEAM_TICKET_PREFIX="SQOR" TEAM_MEMBERS="alice-hu,bob-hu" \
     bash .cursor/skills/hu-team-staging-status/team-staging-status.sh
 
@@ -122,6 +128,8 @@ resolve_team_inputs() {
   TEAM_TICKET_REGEX_EFF="${TEAM_TICKET_REGEX:-}"
   TEAM_MEMBERS_EFF="${TEAM_MEMBERS:-}"
   TEAM_AUTHORS_PATTERN_EFF="${TEAM_AUTHORS_PATTERN:-}"
+  TEAM_FILTER_MODE_EFF="${TEAM_FILTER_MODE:-auto}"
+  TEAM_FILTER_MODE_EFF="$(echo "$TEAM_FILTER_MODE_EFF" | tr '[:upper:]' '[:lower:]')"
 
   if is_interactive; then
     if [[ -z "$TEAM_NAME_EFF" ]]; then
@@ -132,8 +140,10 @@ resolve_team_inputs() {
       TEAM_TICKET_PREFIX_EFF="$(prompt_with_default "Jira ticket prefix (e.g. SQSH)" "")"
     fi
 
-    if [[ -z "$TEAM_MEMBERS_EFF" && -z "$TEAM_AUTHORS_PATTERN_EFF" ]]; then
-      TEAM_MEMBERS_EFF="$(prompt_with_default "Team members (comma-separated author names/logins)" "")"
+    if [[ "$TEAM_FILTER_MODE_EFF" == "author" || "$TEAM_FILTER_MODE_EFF" == "either" ]]; then
+      if [[ -z "$TEAM_MEMBERS_EFF" && -z "$TEAM_AUTHORS_PATTERN_EFF" ]]; then
+        TEAM_MEMBERS_EFF="$(prompt_with_default "Team members (comma-separated author names/logins)" "")"
+      fi
     fi
   fi
 
@@ -145,6 +155,23 @@ resolve_team_inputs() {
     TEAM_AUTHORS_PATTERN_EFF="$(derive_authors_pattern_from_members "$TEAM_MEMBERS_EFF")"
   fi
 
+  case "$TEAM_FILTER_MODE_EFF" in
+    auto|ticket|author|either) ;;
+    *)
+      echo "Invalid TEAM_FILTER_MODE: ${TEAM_FILTER_MODE_EFF}. Expected auto|ticket|author|either."
+      echo ""
+      print_usage
+      exit 1
+      ;;
+  esac
+  if [[ "$TEAM_FILTER_MODE_EFF" == "auto" ]]; then
+    if [[ -n "$TEAM_AUTHORS_PATTERN_EFF" ]]; then
+      TEAM_FILTER_MODE_EFF="author"
+    else
+      TEAM_FILTER_MODE_EFF="ticket"
+    fi
+  fi
+
   local missing=0
   if [[ -z "$TEAM_NAME_EFF" ]]; then
     echo "Missing TEAM_NAME."
@@ -154,8 +181,12 @@ resolve_team_inputs() {
     echo "Missing TEAM_TICKET_PREFIX or TEAM_TICKET_REGEX."
     missing=1
   fi
-  if [[ -z "$TEAM_AUTHORS_PATTERN_EFF" ]]; then
-    echo "Missing TEAM_MEMBERS or TEAM_AUTHORS_PATTERN."
+  if [[ "$TEAM_FILTER_MODE_EFF" == "author" && -z "$TEAM_AUTHORS_PATTERN_EFF" ]]; then
+    echo "TEAM_FILTER_MODE=author requires TEAM_MEMBERS or TEAM_AUTHORS_PATTERN."
+    missing=1
+  fi
+  if [[ "$TEAM_FILTER_MODE_EFF" == "either" && -z "$TEAM_AUTHORS_PATTERN_EFF" && -z "$TEAM_TICKET_REGEX_EFF" ]]; then
+    echo "TEAM_FILTER_MODE=either requires TEAM_MEMBERS/TEAM_AUTHORS_PATTERN and/or TEAM_TICKET_PREFIX/TEAM_TICKET_REGEX."
     missing=1
   fi
   if [[ "$missing" -eq 1 ]]; then
@@ -167,6 +198,7 @@ resolve_team_inputs() {
   debug_log "team_name=${TEAM_NAME_EFF}"
   debug_log "ticket_regex=${TEAM_TICKET_REGEX_EFF}"
   debug_log "authors_pattern=${TEAM_AUTHORS_PATTERN_EFF}"
+  debug_log "filter_mode=${TEAM_FILTER_MODE_EFF}"
 }
 
 jira_enabled() {
@@ -252,7 +284,29 @@ is_skippable() {
 
 author_matches_team() {
   local author="$1"
+  [[ -z "$TEAM_AUTHORS_PATTERN_EFF" ]] && return 1
   echo "$author" | grep -qiE -- "$TEAM_AUTHORS_PATTERN_EFF"
+}
+
+ticket_matches_team() {
+  local ticket="$1"
+  [[ -n "$ticket" ]]
+}
+
+commit_matches_team() {
+  local author="$1"
+  local ticket="$2"
+  case "$TEAM_FILTER_MODE_EFF" in
+    ticket) ticket_matches_team "$ticket" ;;
+    author) author_matches_team "$author" ;;
+    either)
+      author_matches_team "$author" && return 0
+      ticket_matches_team "$ticket"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
 }
 
 normalize_name() {
@@ -310,12 +364,13 @@ get_team_commits() {
   while IFS='|' read -r author subject; do
     [[ -z "$author" ]] && continue
     is_skippable "$subject" && continue
-    author_matches_team "$author" || continue
+
+    ticket="$(extract_ticket "$subject")"
+    commit_matches_team "$author" "$ticket" || continue
 
     name="$(normalize_name "$author")"
     [[ -z "$name" ]] && name="$author"
 
-    ticket="$(extract_ticket "$subject")"
     pr_num="$(extract_pr_number "$subject")"
 
     key="${author}:${subject}"

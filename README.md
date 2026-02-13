@@ -50,4 +50,4 @@ The rules in this repo are complementary and can be installed following the same
 | Skill | Purpose | Run |
 |------|---------|-----|
 | hu-shark-staging-status | Staging/develop summary for Squad Shark with Jira title/link enrichment | `bash .cursor/skills/hu-shark-staging-status/shark-staging-status.sh` |
-| hu-team-staging-status | Generalized staging/develop summary for a team provided at runtime | `bash .cursor/skills/hu-team-staging-status/team-staging-status.sh` |
+| hu-team-staging-status | Generalized staging/develop summary for a team provided at runtime (supports ticket-prefix-only mode, e.g. `SQZB`) | `bash .cursor/skills/hu-team-staging-status/team-staging-status.sh` |
