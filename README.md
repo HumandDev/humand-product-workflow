@@ -20,13 +20,7 @@ Shared Cursor skills and agent configuration for the Humand development team.
 1. Install the GitHub CLI: https://cli.github.com/
 2. Authenticate: `gh auth login`
 3. Clone this repo and open it in Cursor.
-4. Ask the agent to refine/estimate a feature and invoke the `feature-estimate-plan` skill when needed.
-
-### For Developers
-
-Developers using the multi-repo workspace at `~/Code/humand/` already have workspace-level commands (`/start`, `/commit`, `/finish`, `/status`) in `.cursor/commands/`.
-
-The skills in this repo are used directly from this repository; no copy/symlink step is required.
+4. Ask the agent to refine/estimate a feature or to give you the team's status for the week.
 
 ## Skills
 
