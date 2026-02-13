@@ -6,7 +6,7 @@ Shared Cursor skills and agent configuration for the Humand development team.
 
 ```
 .cursor/skills/
-  feature-plan/
+  feature-estimate-plan/
     SKILL.md
   hu-team-staging-status/
     SKILL.md
@@ -23,12 +23,12 @@ Shared Cursor skills and agent configuration for the Humand development team.
 4. Copy or symlink the skills you need into your project's `.cursor/skills/` directory:
    ```bash
    # Option A: Symlink (auto-updates when you pull)
-   ln -s /path/to/humand-agent-tooling/.cursor/skills/feature-plan /your/project/.cursor/skills/feature-plan
+   ln -s /path/to/humand-agent-tooling/.cursor/skills/feature-estimate-plan /your/project/.cursor/skills/feature-estimate-plan
 
    # Option B: Copy
-   cp -R /path/to/humand-agent-tooling/.cursor/skills/feature-plan /your/project/.cursor/skills/feature-plan
+   cp -R /path/to/humand-agent-tooling/.cursor/skills/feature-estimate-plan /your/project/.cursor/skills/feature-estimate-plan
    ```
-5. Open the project in Cursor and ask the agent to plan a feature; invoke the `feature-plan` skill when needed.
+5. Open the project in Cursor and ask the agent to refine/estimate a feature; invoke the `feature-estimate-plan` skill when needed.
 
 ### For Developers
 
@@ -40,5 +40,5 @@ The skills in this repo are complementary and can be installed following the sam
 
 | Skill | Purpose | Run |
 |------|---------|-----|
-| feature-plan | Feature planning, feasibility, and complexity assessment across Humand repos (supports Jira browsing via `JIRA_API_TOKEN`/fallback env vars) | Ask the agent to use the `feature-plan` skill |
+| feature-estimate-plan | Feature refinement with evidence-backed **time-per-repo estimates**, feasibility, and execution planning (supports Jira browsing via `JIRA_API_TOKEN`/fallback env vars) | Ask the agent to use the `feature-estimate-plan` skill |
 | hu-team-staging-status | Generalized staging/develop summary for a team provided at runtime (supports ticket-prefix-only mode, e.g. `SQZB`) | `bash .cursor/skills/hu-team-staging-status/team-staging-status.sh` |
