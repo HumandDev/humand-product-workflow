@@ -26,3 +26,4 @@ Optional debugging:
 - Set `SHARK_STATUS_DEBUG=1` to log non-sensitive debug info (e.g., which Jira vars are set/unset and HTTP status codes).
 
 Default base URL (if none provided): `https://humand.atlassian.net/browse/`
+
