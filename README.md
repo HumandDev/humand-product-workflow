@@ -17,10 +17,20 @@ Shared Cursor skills and agent configuration for the Humand development team.
 
 ### For Product Managers
 
-1. Install the GitHub CLI: https://cli.github.com/
-2. Authenticate: `gh auth login`
-3. Clone this repo and open it in Cursor.
-4. Ask the agent to refine/estimate a feature or to give you the team's status for the week.
+Use Cloud Agents instead of local cloning.
+
+1. Open https://cursor.com/dashboard?tab=cloud-agents and go to **My Settings**.
+2. Add secret `GH_TOKEN` (read-only):
+   - In GitHub: **Settings -> Developer settings -> Personal access tokens -> Fine-grained tokens -> Generate new token**.
+   - Give the token read-only repository permissions (minimum: **Metadata: Read**, **Contents: Read**, **Pull requests: Read**, **Issues: Read**).
+   - Copy the token and paste it as the `GH_TOKEN` secret in Cursor Cloud Agents.
+3. Add secret `JIRA_API_TOKEN` (read-only):
+   - In Atlassian: **Account settings -> Security -> API tokens -> Create API token**.
+   - Use an account with Jira browse/read permissions only.
+   - Copy the token and paste it as the `JIRA_API_TOKEN` secret in Cursor Cloud Agents.
+4. Use Cloud Agents to run the skills:
+   - Cursor Agents UI: https://cursor.com/agents
+   - Slack: tag `@Cursor` with your request.
 
 ## Skills
 
