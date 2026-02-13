@@ -6,7 +6,11 @@ Shared Cursor rules and agent configuration for the Humand development team.
 
 ```
 .cursor/rules/
-  feature-plan.mdc   # Feature planning & feasibility assessment (agent-requested rule)
+  feature-plan.mdc                  # Feature planning & feasibility assessment (agent-requested rule)
+.cursor/skills/
+  hu-team-staging-status/
+    SKILL.md
+    team-staging-status.sh
 ```
 
 ## Setup
@@ -37,3 +41,9 @@ The rules in this repo are complementary and can be installed following the same
 | Rule | Type | Triggers when | Requires |
 |------|------|---------------|----------|
 | feature-plan | Agent-requested | User asks to plan a feature, assess feasibility, or estimate complexity | `gh` CLI (authenticated with HumandDev org access) |
+
+## Skills
+
+| Skill | Purpose | Run |
+|------|---------|-----|
+| hu-team-staging-status | Generalized staging/develop summary for a team provided at runtime (supports ticket-prefix-only mode, e.g. `SQZB`) | `bash .cursor/skills/hu-team-staging-status/team-staging-status.sh` |
