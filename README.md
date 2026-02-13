@@ -37,4 +37,4 @@ Use Cloud Agents.
 | Skill | Purpose | Run |
 |------|---------|-----|
 | feature-estimate-plan | Feature refinement with evidence-backed **effort-per-repo assessment** (metric declared in output), feasibility, execution planning, and bilingual delivery (English + appended Spanish) (supports Jira browsing via `JIRA_API_TOKEN`/fallback env vars) | Ask the agent to use the `feature-estimate-plan` skill |
-| hu-team-staging-status | Generalized staging/develop summary for a team provided at runtime (supports ticket-prefix-only mode, e.g. `SQZB`) | `bash .cursor/skills/hu-team-staging-status/team-staging-status.sh` |
+| hu-team-staging-status | Generalized staging/develop summary for a team provided at runtime (supports ticket-prefix-only mode, e.g. `SQZB`) | Ask the agent to use the `hu-team-staging-status` skill or just say "what did the SQSH team do this week?" |
