@@ -1,10 +1,12 @@
 ---
-description: When the user asks to plan a feature, assess feasibility, estimate complexity, or produce an implementation plan for a feature across Humand repos
+description: When the user asks to plan a feature, assess feasibility, or estimate complexity for a feature across Humand repos
 globs: 
 alwaysApply: false
 ---
 
-You are helping a product manager plan a feature. Your task is to explore the codebase via GitHub API (no local clones needed), assess technical feasibility, estimate relative complexity, and produce an implementation plan broken down by developer role.
+You are helping a product manager plan a feature. Your task is to explore the codebase via GitHub API (no local clones needed), assess technical feasibility, estimate relative complexity, and produce a **practical, PM-ready** output that helps finalize requirements efficiently.
+
+**Do NOT produce an implementation plan** (no task breakdown by developer role, no step-by-step build instructions) unless the user explicitly asks for it.
 
 ## Prerequisites
 
@@ -81,7 +83,7 @@ Use these as starting points when exploring. Do NOT assume they are exhaustive -
 
 Check if the user already provided a feature/fix/change description or Jira ticket ID in their message.
 
-If any requirement is **ambiguous or missing**, ask a small set of **dynamic** clarifying questions tailored to the request, then **pause** and wait for answers **before** continuing to Steps 2–6.
+If any requirement is **ambiguous or missing**, ask a small set of **dynamic** clarifying questions tailored to the request, then **pause** and wait for answers **before** continuing to Steps 2–5.
 
 This clarification gate applies **at the start and mid-way** through exploration: if you discover a new unknown later (e.g., while reading code) that would change scope, API contract, data meaning, permissions/visibility, acceptance criteria, or sizing, **stop and ask** instead of guessing.
 
@@ -224,64 +226,27 @@ Flag anything that increases risk or uncertainty:
 
 If no flags, explicitly say "No elevated risks identified."
 
-### Step 5: Produce Execution Plan (high-level, not deep implementation)
+### Step 5: Produce PM-Ready Output (concise, practical)
 
-Structure the plan by developer role. For each role, list:
+Goal: help a PM **finish the requirements** and decide if the change is feasible and what it touches — without turning this into a developer execution plan.
 
-- **Repo**: which repo to work in
-- **Summary**: one-line description of what this role does
-- **Tasks**: 3–6 high-level tasks focused on validation and effort
-  - Avoid file-by-file lists unless the user explicitly asks
-  - Reference at most **one** existing pattern/file per role (if needed)
-- **Depends on**: which other roles must complete first (if any)
+Guidelines:
+- Keep it **short** and **decision-oriented**
+- Prefer **Yes/No/Unknown** statements over speculation
+- If something cannot be proven from code exploration, mark it **unknown**
+- Do not list step-by-step tasks or per-role implementation breakdown
 
-#### Format (generic):
+Include, when applicable:
+- **Backend required?** (yes/no/unknown) and *why*
+- **Data contracts** (endpoint(s), method, path, request params, response shape)
+- **Visibility/permissions/segmentation implications**
+- **Definitions that must be decided** (e.g., "what counts", time window, states)
+- **Risks & edge cases** (performance, caching, timezone, correctness)
+- **Acceptance criteria draft** (only if it can be stated unambiguously)
 
-```
-## Implementation Plan
+### Step 6: Output Summary (single structured answer)
 
-### Backend (humand-main-api)
-Summary: <one line>
-Depends on: none
-
-1. Validate data source(s) and access/visibility rules
-2. Define or extend API contract (inputs/outputs)
-3. Implement logic + error handling
-4. Add minimal tests or metrics (if applicable)
-
-### Frontend - Web (humand-web)
-Summary: <one line>
-Depends on: Backend (if API changes), Translations
-
-1. Integrate data fetch and caching strategy
-2. Implement UI changes per UX definitions
-3. Handle error/loading/empty states
-
-### Mobile (humand-mobile)
-Summary: <one line>
-Depends on: Backend (if API changes), Translations
-
-1. Integrate data fetch and caching strategy
-2. Implement UI changes per UX definitions
-3. Handle error/loading/empty states
-
-### Translations (hu-translations)
-Summary: <one line>
-Depends on: none
-
-1. Add new keys in the relevant namespace(s) and propagate to other locales
-
-### Data Contracts
-
-<endpoint>:
-  Method: GET/POST
-  Path: /<path>
-  Response: { field: type, ... }
-```
-
-### Step 6: Output Summary
-
-Display the full assessment as a single structured output:
+Display the full assessment as a single structured output (no implementation plan):
 
 ```
 # Feature Plan: <feature name>
@@ -291,6 +256,13 @@ Display the full assessment as a single structured output:
 
 ## Affected Repos
 <bulleted list with role tags>
+
+## Backend Required?
+<yes | no | unknown>
+<1-3 bullets why, referencing files/patterns found>
+
+## Key Definitions / Open Questions
+<bulleted list; only what is needed to unblock>
 
 ## Feasibility
 <standard extension | moderate adaptation | significant new pattern>
@@ -302,13 +274,13 @@ Display the full assessment as a single structured output:
 ## Risk Flags
 <list or "none">
 
-## Implementation Plan
-<per-role breakdown as above>
+## Data Contracts (if any)
+<endpoint(s) with request/response shapes>
 
 ## Suggested Next Steps
-- Share this plan with the development team
-- Create Jira subtasks per role (Backend, Frontend, Mobile, Translations)
-- Developer runs /start to create branches across repos
+- Confirm definitions above (time windows, states, permissions/visibility, etc.)
+- Attach Jira/Figma (if available) and record the agreed contract(s)
+- Hand off to devs for implementation once requirements are stable
 ```
 
 ## Error Handling
