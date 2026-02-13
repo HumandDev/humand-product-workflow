@@ -338,7 +338,7 @@ extract_ticket() {
 
 extract_pr_number() {
   local subject="$1"
-  echo "$subject" | grep -oE '\(#([0-9]+)\)' | grep -oE '[0-9]+' || true
+  echo "$subject" | grep -oE '\(#([0-9]+)\)' | grep -oE '[0-9]+' | head -1 || true
 }
 
 clean_subject() {
