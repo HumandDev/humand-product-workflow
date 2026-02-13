@@ -17,7 +17,7 @@ Shared Cursor skills and agent configuration for the Humand development team.
 
 ### For Product Managers
 
-Use Cloud Agents instead of local cloning.
+Use Cloud Agents.
 
 1. Open https://cursor.com/dashboard?tab=cloud-agents and go to **My Settings**.
 2. Add secret `GH_TOKEN` (read-only):
