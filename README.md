@@ -40,5 +40,5 @@ The skills in this repo are complementary and can be installed following the sam
 
 | Skill | Purpose | Run |
 |------|---------|-----|
-| feature-estimate-plan | Feature refinement with evidence-backed **time-per-repo estimates**, feasibility, and execution planning (supports Jira browsing via `JIRA_API_TOKEN`/fallback env vars) | Ask the agent to use the `feature-estimate-plan` skill |
+| feature-estimate-plan | Feature refinement with evidence-backed **time-per-repo estimates**, feasibility, execution planning, and bilingual delivery (English + appended Spanish) (supports Jira browsing via `JIRA_API_TOKEN`/fallback env vars) | Ask the agent to use the `feature-estimate-plan` skill |
 | hu-team-staging-status | Generalized staging/develop summary for a team provided at runtime (supports ticket-prefix-only mode, e.g. `SQZB`) | `bash .cursor/skills/hu-team-staging-status/team-staging-status.sh` |

@@ -23,6 +23,10 @@ Always include a table like:
 
 If evidence is insufficient, use `unknown` instead of guessing.
 
+Final delivery must be bilingual:
+- English output first
+- Spanish translation second, appended after the English output
+
 ## Operating Principles
 
 - Read-only planning mode: do not modify product code or create branches in product repos.
@@ -161,6 +165,16 @@ Per repo include:
 
 No file-by-file patch plan unless explicitly requested.
 
+### Step 7: Translate and append Spanish version (final step)
+
+After completing the English output, provide a full Spanish translation appended below it.
+
+Rules:
+- Keep all estimates, numbers, and confidence levels exactly aligned with English.
+- Preserve structure and section order.
+- Use a clear separator heading: `## Versión en Español`.
+- Do not replace the English output; always append Spanish after it.
+
 ## Mandatory Output Format
 
 ```md
@@ -195,6 +209,42 @@ No file-by-file patch plan unless explicitly requested.
 - ...
 ```
 
+Then append:
+
+```md
+## Versión en Español
+
+# Refinamiento de Funcionalidad: <nombre de la funcionalidad>
+
+## Tiempo por Repositorio (Resultado Principal)
+| Repositorio | Estimación (tiempo de ingeniería) | Confianza | Motivo |
+|-------------|-----------------------------------|-----------|--------|
+| ...         | ...                               | ...       | ...    |
+
+## Total
+- Tiempo de ingeniería: <rango>
+- Tiempo calendario probable: <rango + supuestos>
+
+## Alcance y Supuestos
+- ...
+
+## Factibilidad
+- <extensión estándar | adaptación moderada | patrón nuevo significativo>
+- Evidencia: <archivos/endpoints>
+
+## Riesgos
+- ...
+
+## Plan de Ejecución por Repositorio
+### <repositorio>
+- Resumen:
+- Tareas:
+- Dependencias:
+
+## Preguntas Abiertas
+- ...
+```
+
 ## Estimation Rules
 
 - Never present estimates without supporting evidence.
@@ -202,6 +252,7 @@ No file-by-file patch plan unless explicitly requested.
 - Mark unknowns as unknown.
 - If one requested surface does not currently exist, call it out explicitly and provide a separate estimate path.
 - For translation work, route updates to `hu-translations` (not app repos).
+- Always append a Spanish translation after the English output unless the user explicitly asks for a different language format.
 
 ## Error Handling
 
