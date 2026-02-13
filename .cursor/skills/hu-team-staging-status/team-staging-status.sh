@@ -32,6 +32,7 @@ TEAM_AUTHORS_PATTERN_EFF=""
 TEAM_FILTER_MODE_EFF=""
 
 declare -A JIRA_SUMMARY_CACHE
+declare -A JIRA_TITLE_FALLBACK_CACHE
 
 debug_log() {
   if [[ "${TEAM_STATUS_DEBUG:-}" == "1" ]]; then
@@ -245,34 +246,93 @@ jira_issue_title() {
     return 0
   fi
 
-  local root resp status body summary
+  # Try Jira API v3 first, then v2 for compatibility.
+  local root resp status body summary parsed api_ver
   root="$(jira_site_root)"
-  resp=$(curl -sS -u "${JIRA_EMAIL_EFF}:${JIRA_TOKEN_EFF}" \
-    -H "Accept: application/json" \
-    -w "\n%{http_code}" \
-    "${root%/}/rest/api/3/issue/${key}?fields=summary" 2>/dev/null || true)
+  summary=""
+  for api_ver in 3 2; do
+    resp=$(curl -sS -u "${JIRA_EMAIL_EFF}:${JIRA_TOKEN_EFF}" \
+      -H "Accept: application/json" \
+      -w "\n%{http_code}" \
+      "${root%/}/rest/api/${api_ver}/issue/${key}?fields=summary" 2>/dev/null || true)
 
-  status="$(printf '%s\n' "$resp" | tail -n1)"
-  body="$(printf '%s\n' "$resp" | sed -e '$d')"
-  if [[ "$status" != "200" ]]; then
-    debug_log "jira fetch ${key} http=${status}"
-    echo ""
-    return 0
-  fi
+    status="$(printf '%s\n' "$resp" | tail -n1)"
+    body="$(printf '%s\n' "$resp" | sed -e '$d')"
+    if [[ "$status" != "200" ]]; then
+      debug_log "jira fetch ${key} api=v${api_ver} http=${status}"
+      continue
+    fi
 
-  summary="$(python3 - <<'PY' 2>/dev/null
-import sys
-import json
+    parsed="$(printf '%s' "$body" | python3 -c 'import json, sys
 try:
     data = json.load(sys.stdin)
-    print(data["fields"]["summary"])
+    print(data.get("fields", {}).get("summary", ""))
 except Exception:
     pass
-PY
-<<< "$body" || true)"
+' 2>/dev/null || true)"
+    if [[ -n "$parsed" ]]; then
+      summary="$parsed"
+      break
+    fi
+  done
 
   JIRA_SUMMARY_CACHE[$key]="${summary}"
   echo "${summary}"
+}
+
+jira_issue_title_from_pr_ref() {
+  local repo="$1" pr_num="$2" ticket="$3"
+  [[ -z "$repo" || -z "$pr_num" || -z "$ticket" ]] && { echo ""; return 0; }
+
+  local cache_key="${repo}#${pr_num}"
+  if [[ -n "${JIRA_TITLE_FALLBACK_CACHE[$cache_key]:-}" ]]; then
+    echo "${JIRA_TITLE_FALLBACK_CACHE[$cache_key]}"
+    return 0
+  fi
+
+  local ref normalized slug
+  ref=$(gh api "repos/${ORG}/${repo}/pulls/${pr_num}" --jq '.head.ref' 2>/dev/null || true)
+  [[ -z "$ref" || "$ref" = "null" ]] && { echo ""; return 0; }
+
+  normalized=$(echo "$ref" | tr '/_' '-')
+  if echo "$normalized" | grep -qi "$ticket"; then
+    slug=$(echo "$normalized" | sed -E "s/^.*${ticket}-?//I")
+  else
+    slug="${normalized##*-}"
+  fi
+  slug=$(echo "$slug" | sed -E 's/^-+//; s/-+$//')
+  [[ -z "$slug" ]] && { echo ""; return 0; }
+
+  local IFS='-'
+  read -r -a parts <<< "$slug"
+  [[ ${#parts[@]} -eq 0 ]] && { echo ""; return 0; }
+
+  local titled=() p
+  for p in "${parts[@]}"; do
+    [[ -z "$p" ]] && continue
+    titled+=("${p^}")
+  done
+  [[ ${#titled[@]} -eq 0 ]] && { echo ""; return 0; }
+
+  local inferred=""
+  local last_idx=$((${#titled[@]} - 1))
+  if [[ ${#titled[@]} -ge 3 && "${parts[0],,}" = "${parts[$last_idx],,}" ]]; then
+    local i
+    for ((i = 0; i < last_idx; i++)); do
+      [[ -n "$inferred" ]] && inferred="${inferred} | "
+      inferred="${inferred}${titled[$i]}"
+    done
+    inferred="${inferred} [${titled[$last_idx]}]"
+  else
+    local i
+    for ((i = 0; i < ${#titled[@]}; i++)); do
+      [[ -n "$inferred" ]] && inferred="${inferred} "
+      inferred="${inferred}${titled[$i]}"
+    done
+  fi
+
+  JIRA_TITLE_FALLBACK_CACHE[$cache_key]="$inferred"
+  echo "$inferred"
 }
 
 is_skippable() {
@@ -389,13 +449,15 @@ get_team_commits() {
     ticket_url=""
     if [[ -n "$ticket" ]]; then
       title="$(jira_issue_title "$ticket" || true)"
+      if [[ -z "$title" && -n "$pr_num" ]]; then
+        title="$(jira_issue_title_from_pr_ref "$repo" "$pr_num" "$ticket" || true)"
+      fi
       [[ -n "$title" ]] && main_text="$title"
       ticket_url="$(jira_issue_url "$ticket" || true)"
     fi
 
     suffix="(${name})"
     if [[ -n "$ticket" ]]; then
-      suffix="${suffix} | ${ticket}"
       if [[ -n "$ticket_url" ]]; then
         suffix="${suffix} | ${ticket_url}"
       fi
