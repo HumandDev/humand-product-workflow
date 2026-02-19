@@ -1,4 +1,4 @@
-# Humand Agent Tooling
+# Humand Product Workflow
 
 Shared Cursor skills and agent configuration for the Humand development team.
 
