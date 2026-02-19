@@ -64,3 +64,7 @@ Team members are optional and only required in author-based filtering mode.
 - API token (first found): `JIRA_API_TOKEN`, `ATLASSIAN_API_TOKEN`, `JIRA_TOKEN`
 
 If Jira credentials are not set, the skill falls back to PR/commit titles (no Jira calls).
+
+## Output language
+
+The shell script produces raw data. When presenting results to the user, any agent-generated summary, commentary, or section headers must be in Spanish.

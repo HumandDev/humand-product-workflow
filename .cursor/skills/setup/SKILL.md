@@ -7,9 +7,9 @@ Walk the user through each check sequentially. After each step, show the result 
 Present a brief intro before starting:
 
 ```
-## Setup Wizard
+## Asistente de Configuración
 
-Checking your environment so everything works on the first try.
+Verificando tu entorno para que todo funcione a la primera.
 ```
 
 ## Step 1: GitHub CLI
@@ -42,10 +42,10 @@ gh api repos/HumandDev/<repo> --jq '.full_name' 2>&1
 Collect results into a table:
 
 ```
-| Repo | Status |
+| Repo | Estado |
 |------|--------|
-| humand-main-api | ✓ accessible |
-| humand-web | ✗ 404 — check org membership |
+| humand-main-api | ✓ accesible |
+| humand-web | ✗ 404 — verificar membresía de org |
 ```
 
 - **Pass**: all repos return their full name.
@@ -100,27 +100,27 @@ Read `.cursor/teams.json` from the workspace.
 After all steps, show a final scorecard:
 
 ```
-## Setup Complete
+## Configuración Completa
 
-| # | Check | Result |
-|---|-------|--------|
+| # | Verificación | Resultado |
+|---|--------------|-----------|
 | 1 | GitHub CLI | ✓ |
 | 2 | GitHub Auth | ✓ |
-| 3 | Repo Access (6/6) | ✓ |
+| 3 | Acceso a repos (6/6) | ✓ |
 | 4 | Atlassian MCP | ✓ |
 | 5 | Jira | ✓ |
 | 6 | Confluence | ✓ |
-| 7 | Teams config | ✓ |
+| 7 | Config de equipos | ✓ |
 
-All checks passed — you're good to go!
-Try `/sprint-report rhino` or ask me to plan a feature.
+Todas las verificaciones pasaron — ¡todo listo!
+Probá `/sprint-report rhino` o pedime planificar una funcionalidad.
 ```
 
 If any checks failed, end with:
 
 ```
-<N> check(s) need attention (marked above).
-Fix those and run `/setup` again to re-verify.
+<N> verificación(es) necesitan atención (marcadas arriba).
+Corregí eso y ejecutá `/setup` de nuevo para re-verificar.
 ```
 
 ## Important

@@ -16,22 +16,20 @@ Always declare the effort metric and legend, then provide per-repo effort.
 Always include a table like:
 
 ```md
-## Effort Metric Used
-- Metric: T-shirt sizes
-- Legend: XS < S < M < L < XL
+## Métrica de Esfuerzo Utilizada
+- Métrica: Talles T-shirt
+- Leyenda: XS < S < M < L < XL
 
-## Effort Per Repo (Main Output)
-| Repo | Effort | Confidence | Why |
-|------|--------|------------|-----|
-| humand-main-api | M | medium | existing endpoint + test updates |
-| humand-web | S | medium | existing surface, light adaptation |
+## Esfuerzo por Repositorio (Resultado Principal)
+| Repositorio | Esfuerzo | Confianza | Motivo |
+|-------------|----------|-----------|--------|
+| humand-main-api | M | media | endpoint existente + actualización de tests |
+| humand-web | S | media | superficie existente, adaptación liviana |
 ```
 
 If evidence is insufficient, use `unknown` instead of guessing.
 
-Final delivery must be bilingual:
-- English output first
-- Spanish translation second, appended after the English output
+Final delivery must be in Spanish.
 
 ## Operating Principles
 
@@ -179,60 +177,13 @@ Per repo include:
 
 No file-by-file patch plan unless explicitly requested.
 
-### Step 7: Translate and append Spanish version (final step)
+### Step 7: Final output
 
-After completing the English output, provide a full Spanish translation appended below it.
-
-Rules:
-- Keep all effort ratings, values, and confidence levels exactly aligned with English.
-- Preserve structure and section order.
-- Use a clear separator heading: `## Versión en Español`.
-- Do not replace the English output; always append Spanish after it.
+Produce the output in Spanish.
 
 ## Mandatory Output Format
 
 ```md
-# Feature Refinement: <feature name>
-
-## Effort Metric Used
-- Metric: <chosen metric, e.g. T-shirt sizes>
-- Legend: <ordered scale definition>
-
-## Effort Per Repo (Main Output)
-| Repo | Effort | Confidence | Why |
-|------|--------|------------|-----|
-| ...  | ...    | ...        | ... |
-
-## Overall Effort
-- Combined effort profile: <summary>
-- Critical path: <repo chain>
-- Parallelization opportunities: <summary>
-
-## Scope and Assumptions
-- ...
-
-## Feasibility
-- <standard extension | moderate adaptation | significant new pattern>
-- Evidence: <files/endpoints>
-
-## Risks
-- ...
-
-## Execution Plan by Repo
-### <repo>
-- Summary:
-- Tasks:
-- Depends on:
-
-## Open Questions
-- ...
-```
-
-Then append:
-
-```md
-## Versión en Español
-
 # Refinamiento de Funcionalidad: <nombre de la funcionalidad>
 
 ## Métrica de Esfuerzo Utilizada
@@ -276,7 +227,7 @@ Then append:
 - Mark unknowns as unknown.
 - If one requested surface does not currently exist, call it out explicitly and provide a separate estimate path.
 - For translation work, route updates to `hu-translations` (not app repos).
-- Always append a Spanish translation after the English output unless the user explicitly asks for a different language format.
+- Always produce the output in Spanish.
 - Do not include time ranges unless the user explicitly requests time.
 
 ## Error Handling
