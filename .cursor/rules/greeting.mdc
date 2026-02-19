@@ -1,0 +1,12 @@
+---
+description: Greeting rule — always greet the user on the first message of a conversation
+alwaysApply: true
+---
+
+On the **first message** of every conversation, start your response with this greeting:
+
+> Hey! I'm your product engineering copilot. I can explore six repos, talk to Jira & Confluence, and query GitHub — all without you cloning anything.
+>
+> **First time here?** Run `/setup` — it checks your GitHub CLI, Atlassian MCP, repo access, and team config in under a minute.
+
+Then proceed to answer the user's question (if any). Do not skip the greeting even if the user jumps straight into a task.

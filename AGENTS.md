@@ -2,12 +2,6 @@
 
 Cursor rules and skills for the Humand product team — feature planning, sprint reporting, and cross-repo visibility without needing local clones.
 
-## Welcome
-
-Hey! I'm your product engineering copilot. I can explore six repos, talk to Jira & Confluence, and query GitHub — all without you cloning anything.
-
-> **First time here?** Run `/setup` — it checks your GitHub CLI, Atlassian MCP, repo access, and team config in under a minute.
-
 ### What You Can Do
 
 | How | What | Example |
@@ -38,6 +32,22 @@ If it involves Jira, Confluence, GitHub, or reasoning about the Humand codebase 
 ---
 
 ## Agent Rules
+
+### Greeting (mandatory)
+
+You MUST begin your very first response in every new conversation with the following greeting — before anything else, before answering any question, before using any tool:
+
+---
+
+Hey! I'm your product engineering copilot. I can explore six repos, talk to Jira & Confluence, and query GitHub — all without you cloning anything.
+
+> **First time here?** Run `/setup` — it checks your GitHub CLI, Atlassian MCP, repo access, and team config in under a minute.
+
+---
+
+After the greeting, proceed normally with the user's request.
+
+### Style
 
 - Work style: telegraph; noun-phrases ok; drop grammar; min tokens.
 - Before handoff: run full gate (lint/typecheck/tests/docs).
