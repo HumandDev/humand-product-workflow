@@ -1,0 +1,111 @@
+{
+  "SQCY": {
+    "aliases": ["coyote", "squad-coyote"],
+    "project_key": "SQCY",
+    "jira_id": "10030",
+    "name": "Squad Coyote"
+  },
+  "SQDO": {
+    "aliases": ["devops", "squad-devops"],
+    "project_key": "SQDO",
+    "jira_id": "10098",
+    "name": "Squad DevOps"
+  },
+  "SQDP": {
+    "aliases": ["dolphin", "squad-dolphin"],
+    "project_key": "SQDP",
+    "jira_id": "10021",
+    "name": "Squad Dolphin"
+  },
+  "SQEG": {
+    "aliases": ["eagle", "squad-eagle"],
+    "project_key": "SQEG",
+    "jira_id": "10023",
+    "name": "Squad Eagle"
+  },
+  "SQGZ": {
+    "aliases": ["grizzly", "squad-grizzly"],
+    "project_key": "SQGZ",
+    "jira_id": "10024",
+    "name": "Squad Grizzly"
+  },
+  "SQJG": {
+    "aliases": ["jaguar", "squad-jaguar"],
+    "project_key": "SQJG",
+    "jira_id": "10012",
+    "name": "Squad Jaguar"
+  },
+  "SQKA": {
+    "aliases": ["koala", "squad-koala"],
+    "project_key": "SQKA",
+    "jira_id": "10065",
+    "name": "Squad Koala"
+  },
+  "SQOT": {
+    "aliases": ["octopus", "squad-octopus"],
+    "project_key": "SQOT",
+    "jira_id": "10032",
+    "name": "Squad Octopus"
+  },
+  "SQOW": {
+    "aliases": ["owl", "squad-owl"],
+    "project_key": "SQOW",
+    "jira_id": "10022",
+    "name": "Squad Owl"
+  },
+  "SQPD": {
+    "aliases": ["panda", "squad-panda"],
+    "project_key": "SQPD",
+    "jira_id": "10019",
+    "name": "Squad Panda"
+  },
+  "SQPM": {
+    "aliases": ["puma", "squad-puma"],
+    "project_key": "SQPM",
+    "jira_id": "10013",
+    "name": "Squad Puma"
+  },
+  "SQRC": {
+    "aliases": ["raccoon", "squad-raccoon"],
+    "project_key": "SQRC",
+    "jira_id": "10031",
+    "name": "Squad Raccoon"
+  },
+  "SQRN": {
+    "aliases": ["rhino", "squad-rhino"],
+    "project_key": "SQRN",
+    "jira_id": "10028",
+    "name": "Squad Rhino"
+  },
+  "SQSH": {
+    "aliases": ["shark", "squad-shark"],
+    "project_key": "SQSH",
+    "jira_id": "10020",
+    "name": "Squad Shark"
+  },
+  "SQSQ": {
+    "aliases": ["squid", "squad-squid"],
+    "project_key": "SQSQ",
+    "jira_id": "10066",
+    "name": "Squad Squid"
+  },
+  "SQXS": {
+    "aliases": ["cross", "squad-cross"],
+    "project_key": "SQXS",
+    "jira_id": "10014",
+    "name": "Squad Cross"
+  },
+  "SQZB": {
+    "aliases": ["zebra", "squad-zebra"],
+    "project_key": "SQZB",
+    "jira_id": "10029",
+    "name": "Squad Zebra"
+  },
+  "_non_squad": {
+    "CESP": { "jira_id": "10025", "name": "Engineering Support Platform", "type": "service_desk" },
+    "CSBM": { "jira_id": "10015", "name": "Support Bugs", "type": "software" },
+    "HU":   { "jira_id": "10002", "name": "Humand", "type": "software" },
+    "ITSM": { "jira_id": "10017", "name": "ITSM", "type": "service_desk" },
+    "PMDR": { "jira_id": "10016", "name": "Product Drafts", "type": "software" }
+  }
+}
