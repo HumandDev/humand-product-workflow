@@ -1,10 +1,8 @@
----
-description: First-time setup wizard — verifies prerequisites, connectivity, and configuration
-globs:
-alwaysApply: false
----
+# First-Time Setup Wizard
 
-You are running the `/setup` wizard. Walk the user through each check below, one step at a time. After each step, show the result (pass/fail) and, if it failed, provide the exact fix before moving on.
+Verifies prerequisites, connectivity, and configuration. Run `/setup` to check your environment.
+
+Walk the user through each check sequentially. After each step, show the result (pass/fail) and, if it failed, provide the exact fix before moving on.
 
 Present a brief intro before starting:
 
@@ -89,8 +87,10 @@ Read `.cursor/teams.json` from the workspace.
   ```json
   {
     "SQRN": {
-      "aliases": ["north", "squad-north"],
-      "project_key": "SQRN"
+      "aliases": ["rhino", "squad-rhino"],
+      "project_key": "SQRN",
+      "jira_id": "10028",
+      "name": "Squad Rhino"
     }
   }
   ```
@@ -113,7 +113,7 @@ After all steps, show a final scorecard:
 | 7 | Teams config | ✓ |
 
 All checks passed — you're good to go!
-Try `/sprint-report north` or ask me to plan a feature.
+Try `/sprint-report rhino` or ask me to plan a feature.
 ```
 
 If any checks failed, end with:

@@ -13,8 +13,9 @@ Hey! I'm your product engineering copilot. I can explore six repos, talk to Jira
 | How | What | Example |
 |-----|------|---------|
 | **Skill** `/setup` | First-time setup wizard — verifies all prerequisites and connectivity | `/setup` |
-| **Skill** `/sprint-report <team>` | Cross-repo sprint health: Jira tickets + linked PRs, status, blockers | `/sprint-report north` |
-| **Rule** `feature-plan` *(auto)* | Feasibility assessment, complexity T-shirt sizing, per-role implementation plan | *"Plan the new reactions feature for feed posts"* |
+| **Skill** `/sprint-report <team>` | Cross-repo sprint health: Jira tickets + linked PRs, status, blockers | `/sprint-report rhino` |
+| **Skill** `/feature-estimate-plan` | Feasibility assessment, complexity sizing, per-repo implementation plan | *"Plan the new reactions feature for feed posts"* |
+| **Skill** `/hu-team-staging-status` | Per-repo summary of staging vs production vs develop for a team | `/hu-team-staging-status shark` |
 | **Jira** via Atlassian MCP | Search, read, create, transition issues; add comments & worklogs | *"What's open in SQRN this sprint?"* |
 | **Confluence** via Atlassian MCP | Search, read, create, update pages & comments | *"Find the onboarding spec in Confluence"* |
 | **GitHub** via `gh` CLI | PRs, branches, code search, file reads across all HumandDev repos | *"Show me open PRs in humand-web"* |
@@ -46,6 +47,7 @@ If it involves Jira, Confluence, GitHub, or reasoning about the Humand codebase 
 - **No implicit writes.** Never run git write operations on your own initiative — only when the user explicitly asks.
 - Destructive ops (`reset --hard`, `push --force`, `clean`, `rebase`) require extra confirmation even when requested.
 - Read commands (`status`, `log`, `diff`, `show`, `branch -l`, `gh` reads) are always allowed without asking.
+- Features and changes must be done on a branch and submitted via PR to `main`.
 
 ### Critical Thinking
 
@@ -99,15 +101,11 @@ When adding a new script, follow the same pattern: put it in `.cursor/scripts/`,
 
 ## Available Skills
 
+All skills are invoked explicitly with `/name`.
+
 | Skill | Description |
 |-------|-------------|
 | `/setup` | First-time setup wizard — verifies gh, Atlassian MCP, repo access, teams config |
 | `/sprint-report <team>` | Cross-repo sprint health report from Jira + GitHub |
-
-## Rules
-
-| Rule | Triggers when |
-|------|---------------|
-| `feature-plan` | User asks to plan a feature, assess feasibility, or estimate complexity |
-
-Rules activate automatically based on context. Skills are invoked explicitly with `/name`.
+| `/feature-estimate-plan` | Feature refinement, per-repo effort assessment, implementation plan |
+| `/hu-team-staging-status` | Per-repo staging vs production vs develop status for a given team |
