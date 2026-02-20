@@ -270,7 +270,7 @@ If page exists, update instead.
 - Jira URLs: `https://humand.atlassian.net/browse/<KEY>`
 - **Observations** section is always present.
 - **Export** section is always present.
-- **Sprint elapsed %** = `min(100, round((today - start) / (end - start) * 100))`
+- **Sprint elapsed %** = `min(100, round((today - start) / (end - start) * 100))`. Omit entirely if dates unavailable.
 
 ## Repos Checked
 
