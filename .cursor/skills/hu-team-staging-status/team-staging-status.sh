@@ -472,22 +472,32 @@ get_team_commits() {
 
 latest_release_pair() {
   local repo_name="$1"
-  local staging="" prod="" branches all_releases
+  local staging="" prod="" branches all_releases all_branch_names
+
+  all_branch_names=$(gh api "repos/${ORG}/${repo_name}/branches" --paginate --jq '.[].name' 2>/dev/null || true)
 
   if echo "$VERSION_REPOS" | grep -qw "$repo_name"; then
-    branches=$(gh api "repos/${ORG}/${repo_name}/branches" --paginate --jq '.[].name' 2>/dev/null \
+    branches=$(echo "$all_branch_names" \
       | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -2 || true)
     staging="$(echo "$branches" | tail -1)"
     prod="$(echo "$branches" | head -1)"
     [[ "$staging" == "$prod" ]] && prod=""
   else
-    all_releases=$(gh api "repos/${ORG}/${repo_name}/branches" --paginate --jq '.[].name' 2>/dev/null \
+    all_releases=$(echo "$all_branch_names" \
       | grep -E '^release-[0-9]{4}\.[0-9]{2}\.[0-9]{2}$' | sort -rV || true)
     staging="$(echo "$all_releases" | head -1)"
     prod="$(echo "$all_releases" | sed -n '2p')"
   fi
 
-  echo "${staging}|${prod}"
+  # Resolve dev branch: prefer 'develop', fall back to repo default branch
+  local dev_branch=""
+  if echo "$all_branch_names" | grep -qxF "develop"; then
+    dev_branch="develop"
+  else
+    dev_branch=$(gh api "repos/${ORG}/${repo_name}" --jq '.default_branch' 2>/dev/null || echo "main")
+  fi
+
+  echo "${staging}|${prod}|${dev_branch}"
 }
 
 line_count() {
@@ -502,18 +512,22 @@ line_count() {
 main() {
   resolve_team_inputs
 
-  local repo_name pair staging prod stg_output dev_output stg_count dev_count summary header
+  local repo_name triple staging prod dev_branch stg_output dev_output stg_count dev_count summary header
   for repo_name in $RELEASE_REPOS $VERSION_REPOS; do
-    pair="$(latest_release_pair "$repo_name")"
-    staging="${pair%%|*}"
-    prod="${pair##*|}"
+    triple="$(latest_release_pair "$repo_name")"
+    staging="$(echo "$triple" | cut -d'|' -f1)"
+    prod="$(echo "$triple" | cut -d'|' -f2)"
+    dev_branch="$(echo "$triple" | cut -d'|' -f3)"
     [[ -z "${staging:-}" ]] && continue
 
     stg_output=""
     if [[ -n "${prod:-}" ]]; then
       stg_output="$(get_team_commits "$repo_name" "$prod" "$staging")"
     fi
-    dev_output="$(get_team_commits "$repo_name" "$staging" "develop")"
+    dev_output=""
+    if [[ -n "${dev_branch:-}" ]]; then
+      dev_output="$(get_team_commits "$repo_name" "$staging" "$dev_branch")"
+    fi
 
     [[ -z "$stg_output" && -z "$dev_output" ]] && continue
 
@@ -528,19 +542,19 @@ main() {
       if [[ -n "$summary" ]]; then
         summary="${summary}, "
       fi
-      summary="${summary}${dev_count} in develop only"
+      summary="${summary}${dev_count} in ${dev_branch} only"
     fi
 
     header="**${repo_name}** -- team:${TEAM_NAME_EFF} -- stg:\`${staging}\`"
     if echo "$VERSION_REPOS" | grep -qw "$repo_name" && [[ -n "${prod:-}" ]]; then
       header="${header} / prod:\`${prod}\`"
     fi
-    header="${header} -- **${summary}**"
+    header="${header} — dev:\`${dev_branch}\` -- **${summary}**"
 
     echo "$header"
     [[ -n "$stg_output" ]] && echo "$stg_output"
     if [[ -n "$dev_output" ]]; then
-      echo "$dev_output" | sed 's/^- /- *develop only:* /'
+      echo "$dev_output" | sed "s/^- /- *${dev_branch} only:* /"
     fi
     echo ""
   done
