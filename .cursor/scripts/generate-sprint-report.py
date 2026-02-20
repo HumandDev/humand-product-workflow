@@ -409,7 +409,10 @@ def generate_observations(categories, ticket_map, repo_stats, elapsed_pct, start
         keys = ", ".join(t["key"] for t in code_done_not_jira)
         obs.append(f"All PRs merged but Jira not 'Done': {keys}. May need status update.")
 
-    unassigned = [t for t in ticket_map.values() if t["assignee"] == "—"]
+    unassigned = [
+        t for t in ticket_map.values()
+        if t["assignee"] == "—" and t["type"] not in ("Epic", "Story", "Initiative")
+    ]
     if unassigned:
         keys = ", ".join(t["key"] for t in unassigned)
         obs.append(f"Unassigned tickets: {keys}.")
@@ -444,7 +447,9 @@ def build_report(tickets, prs_list, reviews, branches_data, sprint_name, start, 
     lines = []
     lines.append(f"# Reporte de Sprint: {sprint_name}\n")
     lines.append(f"**Proyecto:** {project}")
-    lines.append(f"**Fechas:** {start} — {end}")
+    has_dates = start and end and start != "unknown" and end != "unknown"
+    if has_dates:
+        lines.append(f"**Fechas:** {start} — {end}")
     lines.append(f"**Generado:** {datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
 
     lines.append("## Salud\n")
