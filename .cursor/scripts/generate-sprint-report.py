@@ -34,11 +34,13 @@ Output: Markdown report to stdout or -o file.
 """
 
 import argparse
+import csv
+import io
 import json
 import re
 import sys
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, date
 
 JIRA_BASE = "https://humand.atlassian.net/browse"
 
@@ -232,7 +234,23 @@ def parse_jira_branch_field(raw):
     return None
 
 
-def build_report(tickets, prs_list, reviews, branches_data, sprint_name, start, end, project):
+def compute_elapsed_pct(start_str, end_str):
+    """Sprint elapsed % = (today - start) / (end - start) * 100, capped at 100."""
+    try:
+        start_d = date.fromisoformat(start_str[:10])
+        end_d = date.fromisoformat(end_str[:10])
+        today = date.today()
+        total = (end_d - start_d).days
+        if total <= 0:
+            return 100
+        elapsed = (today - start_d).days
+        return min(100, max(0, round(elapsed / total * 100)))
+    except (ValueError, TypeError):
+        return None
+
+
+def build_ticket_data(tickets, prs_list, reviews, branches_data):
+    """Parse tickets + PRs into enriched ticket_map, categories, repo_stats."""
     ticket_map = {}
     for issue in tickets:
         f = issue["fields"]
@@ -341,6 +359,74 @@ def build_report(tickets, prs_list, reviews, branches_data, sprint_name, start, 
     for cat in categories.values():
         cat.sort(key=sort_key)
 
+    return ticket_map, categories, dict(repo_stats)
+
+
+def generate_observations(categories, ticket_map, repo_stats, elapsed_pct, start, end):
+    """Auto-generate data-backed observations."""
+    obs = []
+
+    shipped = categories["shipped"]
+    in_review = categories["in_review"]
+    in_progress = categories["in_progress"]
+    blocked = categories["blocked"]
+    not_started = categories["not_started"]
+    total = len(ticket_map)
+
+    del_pct = round(len(shipped) / total * 100) if total else 0
+
+    if elapsed_pct is not None and del_pct < elapsed_pct - 20:
+        obs.append(
+            f"Sprint is {elapsed_pct}% elapsed but only {del_pct}% of tickets are shipped — "
+            f"delivery is trailing the timeline."
+        )
+
+    done_no_code = [t for t in shipped if not t["_prs"] and t["_jira_dev"]["pr_count"] == 0 and not t["_jira_branch"]]
+    if done_no_code:
+        keys = ", ".join(t["key"] for t in done_no_code)
+        obs.append(f"Tickets marked Done with no linked code: {keys}. Could be non-code tasks or missing PR links.")
+
+    in_progress_done_jira = [
+        t for t in in_progress
+        if t["status_cat"] == "Done"
+    ]
+    in_review_done_jira = [
+        t for t in in_review
+        if t["status_cat"] == "Done"
+    ]
+    mismatches = in_progress_done_jira + in_review_done_jira
+    if mismatches:
+        keys = ", ".join(t["key"] for t in mismatches)
+        obs.append(f"Jira/code status mismatch — these are 'Done' in Jira but code is not fully merged: {keys}.")
+
+    code_done_not_jira = [
+        t for t in ticket_map.values()
+        if t["status_cat"] != "Done"
+        and t["_prs"]
+        and all(p["merged"] for p in t["_prs"])
+    ]
+    if code_done_not_jira:
+        keys = ", ".join(t["key"] for t in code_done_not_jira)
+        obs.append(f"All PRs merged but Jira not 'Done': {keys}. May need status update.")
+
+    unassigned = [t for t in ticket_map.values() if t["assignee"] == "—"]
+    if unassigned:
+        keys = ", ".join(t["key"] for t in unassigned)
+        obs.append(f"Unassigned tickets: {keys}.")
+
+    if blocked:
+        keys = ", ".join(t["key"] for t in blocked)
+        obs.append(f"Blocked tickets: {keys}. Check impediments in Jira.")
+
+    if not obs:
+        obs.append("No anomalies detected.")
+
+    return obs
+
+
+def build_report(tickets, prs_list, reviews, branches_data, sprint_name, start, end, project):
+    ticket_map, categories, repo_stats = build_ticket_data(tickets, prs_list, reviews, branches_data)
+
     has_points = any(t["points"] for t in ticket_map.values())
     total = len(ticket_map)
     shipped = categories["shipped"]
@@ -353,55 +439,61 @@ def build_report(tickets, prs_list, reviews, branches_data, sprint_name, start, 
         return sum(t["points"] or 0 for t in items)
 
     del_pct = round(len(shipped) / total * 100) if total else 0
+    elapsed_pct = compute_elapsed_pct(start, end)
 
     lines = []
-    lines.append(f"# Sprint Report: {sprint_name}\n")
-    lines.append(f"**Project:** {project}")
-    lines.append(f"**Dates:** {start} — {end}")
-    lines.append(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
+    lines.append(f"# Reporte de Sprint: {sprint_name}\n")
+    lines.append(f"**Proyecto:** {project}")
+    lines.append(f"**Fechas:** {start} — {end}")
+    lines.append(f"**Generado:** {datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
 
-    # Health
-    lines.append("## Health\n")
+    lines.append("## Salud\n")
     if has_points:
         tp = pts(ticket_map.values())
         sp = pts(shipped)
         dp = round(sp / tp * 100) if tp else 0
-        lines.append("| | Count | Points |")
-        lines.append("|---|-------|--------|")
-        lines.append(f"| ✅ Shipped | {len(shipped)} | {pts(shipped)} |")
-        lines.append(f"| 👀 In Review | {len(in_review)} | {pts(in_review)} |")
-        lines.append(f"| 🔨 In Progress | {len(in_progress)} | {pts(in_progress)} |")
-        lines.append(f"| 🚫 Blocked | {len(blocked)} | {pts(blocked)} |")
-        lines.append(f"| ⏳ Not Started | {len(not_started)} | {pts(not_started)} |")
+        lines.append("| | Cantidad | Puntos |")
+        lines.append("|---|----------|--------|")
+        lines.append(f"| ✅ Entregado | {len(shipped)} | {pts(shipped)} |")
+        lines.append(f"| 👀 En Revisión | {len(in_review)} | {pts(in_review)} |")
+        lines.append(f"| 🔨 En Progreso | {len(in_progress)} | {pts(in_progress)} |")
+        lines.append(f"| 🚫 Bloqueado | {len(blocked)} | {pts(blocked)} |")
+        lines.append(f"| ⏳ No Iniciado | {len(not_started)} | {pts(not_started)} |")
         lines.append(f"| **Total** | **{total}** | **{tp}** |")
-        lines.append(f"\n**Delivery: {del_pct}% of tickets shipped ({dp}% by points)**\n")
+        delivery = f"**Entrega: {del_pct}% de tickets entregados ({dp}% por puntos)**"
     else:
-        lines.append("| | Count |")
-        lines.append("|---|-------|")
-        lines.append(f"| ✅ Shipped | {len(shipped)} |")
-        lines.append(f"| 👀 In Review | {len(in_review)} |")
-        lines.append(f"| 🔨 In Progress | {len(in_progress)} |")
-        lines.append(f"| 🚫 Blocked | {len(blocked)} |")
-        lines.append(f"| ⏳ Not Started | {len(not_started)} |")
+        lines.append("| | Cantidad |")
+        lines.append("|---|----------|")
+        lines.append(f"| ✅ Entregado | {len(shipped)} |")
+        lines.append(f"| 👀 En Revisión | {len(in_review)} |")
+        lines.append(f"| 🔨 En Progreso | {len(in_progress)} |")
+        lines.append(f"| 🚫 Bloqueado | {len(blocked)} |")
+        lines.append(f"| ⏳ No Iniciado | {len(not_started)} |")
         lines.append(f"| **Total** | **{total}** |")
-        lines.append(f"\n**Delivery: {del_pct}% of tickets shipped**\n")
+        delivery = f"**Entrega: {del_pct}% de tickets entregados**"
+
+    lines.append("")
+    if elapsed_pct is not None:
+        lines.append(f"**Progreso del sprint: {elapsed_pct}% del tiempo transcurrido**")
+    lines.append(delivery)
+    lines.append("")
 
     lines.append("---\n")
 
     jira = lambda k: f"{JIRA_BASE}/{k}"
 
     if shipped:
-        lines.append("## ✅ Shipped\n")
-        lines.append("| Ticket | Title | Type | Assignee | Code |")
-        lines.append("|--------|-------|------|----------|------|")
+        lines.append("## ✅ Entregado\n")
+        lines.append("| Ticket | Título | Tipo | Responsable | Código |")
+        lines.append("|--------|--------|------|-------------|--------|")
         for t in shipped:
             lines.append(f"| {t['key']} {jira(t['key'])} | {t['summary'][:65]} | {t['type']} | {t['assignee']} | {code_summary(t)} |")
         lines.append("")
 
     if in_review:
-        lines.append("## 👀 In Review\n")
-        lines.append("| Ticket | Title | Type | Assignee | PRs | Review status |")
-        lines.append("|--------|-------|------|----------|-----|---------------|")
+        lines.append("## 👀 En Revisión\n")
+        lines.append("| Ticket | Título | Tipo | Responsable | PRs | Estado de revisión |")
+        lines.append("|--------|--------|------|-------------|-----|--------------------|")
         for t in in_review:
             lines.append(
                 f"| {t['key']} {jira(t['key'])} | {t['summary'][:65]} | {t['type']} | {t['assignee']}"
@@ -410,51 +502,102 @@ def build_report(tickets, prs_list, reviews, branches_data, sprint_name, start, 
         lines.append("")
 
     if in_progress:
-        lines.append("## 🔨 In Progress\n")
-        lines.append("| Ticket | Title | Type | Assignee | Activity |")
-        lines.append("|--------|-------|------|----------|----------|")
+        lines.append("## 🔨 En Progreso\n")
+        lines.append("| Ticket | Título | Tipo | Responsable | Actividad |")
+        lines.append("|--------|--------|------|-------------|-----------|")
         for t in in_progress:
             lines.append(f"| {t['key']} {jira(t['key'])} | {t['summary'][:65]} | {t['type']} | {t['assignee']} | {activity_summary(t, branches_data)} |")
         lines.append("")
 
     if blocked:
-        lines.append("## 🚫 Blocked\n")
-        lines.append("| Ticket | Title | Assignee | Notes |")
-        lines.append("|--------|-------|----------|-------|")
+        lines.append("## 🚫 Bloqueado\n")
+        lines.append("| Ticket | Título | Responsable | Notas |")
+        lines.append("|--------|--------|-------------|-------|")
         for t in blocked:
-            lines.append(f"| {t['key']} {jira(t['key'])} | {t['summary'][:65]} | {t['assignee']} | Flagged in Jira |")
+            lines.append(f"| {t['key']} {jira(t['key'])} | {t['summary'][:65]} | {t['assignee']} | Flaggeado en Jira |")
         lines.append("")
 
     if not_started:
-        lines.append("## ⏳ Not Started\n")
-        lines.append("| Ticket | Title | Type | Assignee |")
-        lines.append("|--------|-------|------|----------|")
+        lines.append("## ⏳ No Iniciado\n")
+        lines.append("| Ticket | Título | Tipo | Responsable |")
+        lines.append("|--------|--------|------|-------------|")
         for t in not_started:
             lines.append(f"| {t['key']} {jira(t['key'])} | {t['summary'][:65]} | {t['type']} | {t['assignee']} |")
         lines.append("")
 
-    # Repo breakdown
     lines.append("---\n")
-    lines.append("## Repo Breakdown\n")
-    lines.append("| Repo | Merged | Open PRs | WIP branches |")
-    lines.append("|------|--------|----------|--------------|")
+    lines.append("## Desglose por Repo\n")
+    lines.append("| Repo | Mergeados | PRs Abiertos | Branches WIP |")
+    lines.append("|------|-----------|--------------|--------------|")
     for repo in ["humand-main-api", "humand-web", "humand-mobile", "humand-backoffice", "material-hu", "hu-translations"]:
-        s = repo_stats[repo]
+        s = repo_stats.get(repo, {"merged": 0, "open": 0, "wip": 0})
         lines.append(f"| {repo} | {s['merged']} | {s['open']} | {s['wip']} |")
     lines.append("")
 
-    # Export suggestion
     lines.append("---\n")
-    lines.append("## Export\n")
-    lines.append("This report can be exported in multiple formats:\n")
-    lines.append("- **Confluence** — `/sprint-report <team> --post confluence --space <KEY> --parent <ID>`")
-    lines.append("- **Jira comments** — `/sprint-report <team> --post jira` (adds per-ticket summaries)")
-    lines.append("- **CSV** — pipe through `generate-sprint-report.py --format csv`")
-    lines.append("- **JSON** — pipe through `generate-sprint-report.py --format json`")
-    lines.append("- **Clipboard** — copy the markdown above directly into Slack / Notion / Google Docs")
+    lines.append("## Observaciones\n")
+    for obs in generate_observations(categories, ticket_map, repo_stats, elapsed_pct, start, end):
+        lines.append(f"- {obs}")
+    lines.append("")
+
+    lines.append("---\n")
+    lines.append("## Exportar\n")
+    lines.append("- **Confluence** — `post to confluence --space <KEY> --parent <ID>`")
+    lines.append("- **Comentarios en Jira** — `post to jira`")
+    lines.append("- **CSV** — `generate-sprint-report.py --format csv`")
+    lines.append("- **JSON** — `generate-sprint-report.py --format json`")
+    lines.append("- **Portapapeles** — copiar el markdown a Slack / Notion / Google Docs")
     lines.append("")
 
     return "\n".join(lines)
+
+
+CATEGORY_LABELS = {
+    "shipped": "Entregado",
+    "in_review": "En Revisión",
+    "in_progress": "En Progreso",
+    "blocked": "Bloqueado",
+    "not_started": "No Iniciado",
+}
+
+
+def build_flat_rows(ticket_map, categories):
+    """Flatten tickets into dicts suitable for CSV/JSON export."""
+    rows = []
+    for cat_key, label in CATEGORY_LABELS.items():
+        for t in categories[cat_key]:
+            rows.append({
+                "key": t["key"],
+                "summary": t["summary"],
+                "type": t["type"],
+                "status": t["status"],
+                "category": label,
+                "priority": t["priority"],
+                "assignee": t["assignee"],
+                "points": t["points"],
+                "code": code_summary(t),
+            })
+    return rows
+
+
+def output_csv(rows, out):
+    fieldnames = ["key", "summary", "type", "status", "category", "priority", "assignee", "points", "code"]
+    writer = csv.DictWriter(out, fieldnames=fieldnames)
+    writer.writeheader()
+    writer.writerows(rows)
+
+
+def output_json(rows, sprint_name, start, end, project, out):
+    payload = {
+        "sprint": sprint_name,
+        "project": project,
+        "start": start,
+        "end": end,
+        "generated": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "tickets": rows,
+    }
+    json.dump(payload, out, indent=2, ensure_ascii=False)
+    out.write("\n")
 
 
 def main():
@@ -467,6 +610,8 @@ def main():
     parser.add_argument("--project", required=True, help="Jira project key")
     parser.add_argument("--reviews", default=None, help="Reviews JSON (optional)")
     parser.add_argument("--branches", default=None, help="Branches JSON (optional)")
+    parser.add_argument("--format", default="markdown", choices=["markdown", "csv", "json"],
+                        help="Output format (default: markdown)")
     parser.add_argument("-o", "--output", default=None, help="Output file (default: stdout)")
 
     args = parser.parse_args()
@@ -488,13 +633,21 @@ def main():
         with open(args.branches) as f:
             branches = json.load(f)
 
-    report = build_report(tickets, prs, reviews, branches, args.sprint, args.start, args.end, args.project)
-
-    if args.output:
-        with open(args.output, "w") as f:
-            f.write(report)
-    else:
-        print(report)
+    out_file = open(args.output, "w") if args.output else sys.stdout
+    try:
+        if args.format == "markdown":
+            report = build_report(tickets, prs, reviews, branches, args.sprint, args.start, args.end, args.project)
+            out_file.write(report)
+        else:
+            ticket_map, categories, repo_stats = build_ticket_data(tickets, prs, reviews, branches)
+            rows = build_flat_rows(ticket_map, categories)
+            if args.format == "csv":
+                output_csv(rows, out_file)
+            elif args.format == "json":
+                output_json(rows, args.sprint, args.start, args.end, args.project, out_file)
+    finally:
+        if args.output and out_file is not sys.stdout:
+            out_file.close()
 
 
 if __name__ == "__main__":

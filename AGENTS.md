@@ -33,20 +33,6 @@ If it involves Jira, Confluence, GitHub, or reasoning about the Humand codebase 
 
 ## Agent Rules
 
-### Greeting (mandatory)
-
-You MUST begin your very first response in every new conversation with the following greeting — before anything else, before answering any question, before using any tool:
-
----
-
-Hey! I'm your product engineering copilot. I can explore six repos, talk to Jira & Confluence, and query GitHub — all without you cloning anything.
-
-> **First time here?** Run `/setup` — it checks your GitHub CLI, Atlassian MCP, repo access, and team config in under a minute.
-
----
-
-After the greeting, proceed normally with the user's request.
-
 ### Style
 
 - Work style: telegraph; noun-phrases ok; drop grammar; min tokens.
@@ -104,8 +90,10 @@ When a skill contains a step that could be useful to other skills, extract it in
 | Script | Purpose |
 |--------|---------|
 | `search-prs-for-keys.sh` | Batch-search PRs across all 6 repos for a set of Jira ticket keys. Searches title text + branch names (`head:` qualifier). |
-| `generate-sprint-report.py` | Takes Jira tickets JSON + optional PR/review/branch data, categorizes tickets, outputs formatted markdown report. |
+| `generate-sprint-report.py` | Takes Jira tickets JSON + optional PR/review/branch data, categorizes tickets, outputs markdown/CSV/JSON report. Includes sprint elapsed %, auto-generated observations. |
 | `fetch-jira-dev-info.sh` | Query Jira's dev-status REST API for linked PRs/branches per ticket. Requires `JIRA_EMAIL` + `JIRA_API_TOKEN`. |
+| `fetch-jira-sprint-issues.sh` | Fetch sprint issues via Jira REST API (standalone fallback when MCP is unavailable). Requires `JIRA_EMAIL` + `JIRA_API_TOKEN`. |
+| `run-sprint-report.sh` | End-to-end wrapper: resolves team from `teams.json`, fetches live Jira data, searches GitHub PRs for tickets missing dev info, calls `generate-sprint-report.py`. Always queries live — never reads cached files. |
 
 When adding a new script, follow the same pattern: put it in `.cursor/scripts/`, make it executable, document it here, and include usage/input/output in a header comment.
 
